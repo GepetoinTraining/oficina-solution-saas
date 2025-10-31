@@ -51,13 +51,13 @@ export const SalesProjectCard = forwardRef<
     >
       <Group justify="space-between" align="flex-start" wrap="nowrap">
         <Stack gap="xs">
-          {/* TODO: Linkar para a página do projeto /sales/[id] */}
+          {/* --- CORREÇÃO AQUI --- */}
           <Anchor
             component={Link}
-            href={`#`}
+            href={`/sales/${project.id}`} // <-- Alterado de '#' para o link dinâmico
             fz="lg"
             fw={500}
-            draggable={false} // <-- *** AQUI ESTÁ A CORREÇÃO ***
+            draggable={false}
           >
             {project.name}
           </Anchor>

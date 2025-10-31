@@ -15,8 +15,8 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/app/lib/prisma';
 import { notFound, redirect } from 'next/navigation';
 import { IconArrowLeft, IconUser, IconBuildingCommunity } from '@tabler/icons-react';
-import Link from 'next/link';
 import { FirstMeetingForm } from './_components/FirstMeetingForm';
+import { AiPromptGenerator } from './_components/AiPromptGenerator';
 
 async function getProjectData(projectId: string, userId: string) {
   const project = await prisma.project.findFirst({
@@ -34,16 +34,21 @@ async function getProjectData(projectId: string, userId: string) {
   return project;
 }
 
+// --- CORREÇÃO AQUI ---
+// A prop `params` agora é tipada como uma Promise que resolve para o objeto { id: string }
 export default async function ProjectDetailPage({
-  params,
+  params: paramsPromise, // 1. Renomeamos a prop para indicar que é uma promise
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>; // 2. Corrigimos o tipo
 }) {
+  const params = await paramsPromise; // 3. Await para resolver a promise
+  
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     redirect('/auth/login');
   }
 
+  // 4. Usamos o `params.id` resolvido
   const project = await getProjectData(params.id, session.user.id);
 
   if (!project) {
@@ -55,7 +60,7 @@ export default async function ProjectDetailPage({
       <Stack>
         {/* --- Header --- */}
         <Group>
-          <ActionIcon component={Link} href="/sales" variant="default" size="lg">
+          <ActionIcon component="a" href="/sales" variant="default" size="lg">
             <IconArrowLeft size={18} />
           </ActionIcon>
           <Title order={2}>{project.name}</Title>
@@ -91,7 +96,8 @@ export default async function ProjectDetailPage({
           <Tabs defaultValue="meeting">
             <Tabs.List>
               <Tabs.Tab value="meeting">Briefing / 1ª Reunião</Tabs.Tab>
-              <Tabs.Tab value="quote">Orçamento</Tabs.Tab>
+              <Tabs.Tab value="ai_prompt">Gerador de Prompt (IA)</Tabs.Tab>
+              <Tabs.Tab value="quote">Orçamento (Itens)</Tabs.Tab>
               <Tabs.Tab value="negotiation">Negociação</Tabs.Tab>
               <Tabs.Tab value="production">Produção</Tabs.Tab>
               <Tabs.Tab value="wallet">Project Wallet</Tabs.Tab>
@@ -99,6 +105,16 @@ export default async function ProjectDetailPage({
 
             <Tabs.Panel value="meeting" pt="md">
               <FirstMeetingForm project={project} />
+            </Tabs.Panel>
+            
+            <Tabs.Panel value="ai_prompt" pt="md">
+              <Title order={4}>Gerador de Prompt (Papel para JSON)</Title>
+              <Text c="dimmed" size="sm" mb="md">
+                Use esta ferramenta se você fez anotações em papel. Descreva as
+                medidas e o mock-up para gerar um prompt. Copie o prompt e
+                cole em uma IA para gerar a lista de peças JSON.
+              </Text>
+              <AiPromptGenerator />
             </Tabs.Panel>
 
             <Tabs.Panel value="quote" pt="md">
