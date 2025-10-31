@@ -39,7 +39,7 @@ export default function PricingPage() {
               <Stack>
                 <Title order={3}>Vendas</Title>
                 <Text size="sm">Ideal para focar na captação e orçamentos.</Text>
-                <Title order={2}>R$ 49/mês</Title>
+                <Title order={2}>R$ 149/mês</Title>
                 <Button component={Link} href="/auth/register" variant="outline">
                   Começar
                 </Button>
@@ -65,7 +65,7 @@ export default function PricingPage() {
               <Stack>
                 <Title order={3}>Produção</Title>
                 <Text size="sm">Para organizar a oficina e o financeiro.</Text>
-                <Title order={2}>R$ 99/mês</Title>
+                <Title order={2}>R$ 299/mês</Title>
                 <Button component={Link} href="/auth/register">
                   Começar Teste Gratuito
                 </Button>
@@ -92,7 +92,7 @@ export default function PricingPage() {
               <Stack>
                 <Title order={3}>Completo</Title>
                 <Text size="sm">A solução ponta-a-ponta com add-ons.</Text>
-                <Title order={2}>R$ 149/mês</Title>
+                <Title order={2}>R$ 999/mês</Title>
                 <Button component={Link} href="/auth/register" variant="outline">
                   Começar
                 </Button>

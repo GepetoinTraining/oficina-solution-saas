@@ -1,16 +1,13 @@
 // src/app/api/auth/[...nextauth]/route.ts
 
-import NextAuth, { AuthOptions } from 'next-auth'; // 1. Import AuthOptions
+import NextAuth from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import prisma from '@/app/lib/prisma';
+import bcrypt from 'bcryptjs'; // 1. Importe o bcrypt
 
-// 2. Add the 'AuthOptions' type to your object
-export const authOptions: AuthOptions = {
-  // Configure o Prisma Adapter
+export const authOptions = {
   adapter: PrismaAdapter(prisma),
-
-  // Configure os "Providers" (ex: Email/Senha, Google, etc.)
   providers: [
     CredentialsProvider({
       name: 'Email e Senha',
@@ -19,52 +16,46 @@ export const authOptions: AuthOptions = {
         password: { label: 'Senha', type: 'password' },
       },
       async authorize(credentials) {
-        // LÓGICA DE LOGIN:
-        // 1. Encontre o usuário no banco pelo email
-        // 2. Compare a senha (usando bcrypt)
-        // 3. Se for válido, retorne o objeto 'user'
-        // 4. Se for inválido, retorne 'null'
-
-        // --- Exemplo Simples (SUBSTITUIR PELA LÓGICA REAL) ---
-        if (!credentials) return null;
+        // 2. Adicione a lógica de verificação de senha
+        if (!credentials?.email || !credentials.password) {
+          return null;
+        }
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
 
-        // AINDA FALTA: criptografar e comparar senhas (ex: com 'bcrypt')
-        // Por enquanto, apenas para teste:
-        if (user) {
-          // No futuro, aqui você compararia a senha
+        if (!user || !user.passwordHash) {
+          // Usuário não encontrado ou não tem senha cadastrada
+          return null;
+        }
+
+        // 3. Compare a senha fornecida com o hash no banco
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.passwordHash
+        );
+
+        if (isPasswordValid) {
           return user; // Login bem-sucedido
         } else {
-          return null; // Falha no login
+          return null; // Senha inválida
         }
       },
     }),
-    // TODO: Adicionar outros providers (Google, Mercado Pago, etc.)
   ],
-
-  // Estratégia de Sessão
   session: {
-    strategy: 'jwt', // Agora TypeScript sabe que 'jwt' é do tipo SessionStrategy
+    strategy: 'jwt',
   },
-
-  // Variável de ambiente (Passo 6)
   secret: process.env.AUTH_SECRET,
-
-  // Callbacks (para adicionar o 'id' do usuário à sessão)
   callbacks: {
     async jwt({ token, user }) {
-      // Na primeira vez (login), 'user' é passado.
-      // Adicione o ID do usuário ao token JWT.
       if (user) {
         token.id = user.id;
       }
       return token;
     },
     async session({ session, token }) {
-      // Adicione o ID do token JWT ao objeto da sessão (disponível no cliente)
       if (session.user) {
         session.user.id = token.id as string;
       }

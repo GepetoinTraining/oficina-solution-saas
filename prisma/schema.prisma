@@ -207,10 +207,38 @@ model UserHardwarePrice {
 // ========================================================
 
 model Client {
-  id       String    @id @default(cuid())
-  userId   String
-  user     User      @relation(fields: [userId], references: [id])
-  name     String
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // --- 1. Informações de Contato ---
+  name   String
+  email  String?
+  phone  String?
+
+  // --- 2. Endereço ---
+  addressStreet      String?
+  addressNumber      String?
+  addressNeighborhood String?
+  addressCity        String?
+  addressState       String?
+  addressZipCode     String?
+
+  // --- 3. Perfil Profissional/Social ---
+  company            String? // "Lugar de trabalho"
+  jobTitle           String?
+  linkedinProfile    String?
+  instagramProfile   String?
+
+  // --- 4. Perfil de Qualificação (O "Ouro" do CRM) ---
+  priceSensitivity   PriceSensitivity?
+  incomeLevel        ClientIncomeLevel?
+  leadSource         String? // "Instagram", "Indicação", "Google" (Movido do Projeto para o Cliente)
+  
+  // --- 5. CRM ---
+  notes              String?  @db.Text // Notas gerais
+
+  // Relações
   projects Project[]
   @@map("clients")
 }
@@ -230,7 +258,7 @@ model Project {
 
   // --- NOVOS CAMPOS (SUAS IDEIAS) ---
   // (Ideia 1) Como o cliente o encontrou
-  leadSource String? // "Instagram", "Indicação", "Google"
+  // leadSource String? // "Instagram", "Indicação", "Google"
   // (Ideia 2) Formulário da Primeira Reunião
   meetingNotes String? // Armazena o Markdown ou JSON do formulário
   // (Ideia 4) Relação com Arquiteto
@@ -620,4 +648,19 @@ enum OffcutStatus {
   AVAILABLE
   RESERVED
   USED
+}
+
+// NOVO! Enums para qualificação de cliente
+enum PriceSensitivity {
+  LOW    // Foco em qualidade/design, não pergunta preço
+  MEDIUM // Valoriza qualidade, mas tem um orçamento
+  HIGH   // Foco principal é o preço mais baixo
+}
+
+enum ClientIncomeLevel {
+  LEVEL_1 // < R$ 5k
+  LEVEL_2 // R$ 5k - R$ 10k
+  LEVEL_3 // R$ 10k - R$ 20k
+  LEVEL_4 // R$ 20k - R$ 50k
+  LEVEL_5 // > R$ 50k
 }

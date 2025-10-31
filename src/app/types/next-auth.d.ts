@@ -1,32 +1,36 @@
-// /src/types/next-auth.d.ts
+// src/types/next-auth.d.ts
+
 import 'next-auth';
+import 'next-auth/jwt';
 import { DefaultSession, DefaultUser } from 'next-auth';
 
-// 1. Estenda o tipo 'User' padrão
+// 1. Estenda o tipo 'Session'
 declare module 'next-auth' {
   /**
-   * O 'User' do seu banco de dados (vem do authorize)
+   * O objeto 'session.user' agora terá a propriedade 'id'.
    */
-  interface User extends DefaultUser {
-    id: string; // Adicione o 'id' que vem do seu banco
+  interface Session {
+    user: {
+      id: string;
+    } & DefaultSession['user']; // Mantém as propriedades padrão (name, email, image)
   }
 
   /**
-   * O objeto 'Session' disponível no cliente
+   * O objeto 'user' retornado pelo 'authorize'
+   * (DefaultUser já inclui 'id', mas você pode adicionar mais campos do seu Prisma User aqui)
    */
-  interface Session extends DefaultSession {
-    user: {
-      id: string; // Adicione o 'id' ao 'user' da sessão
-    } & DefaultSession['user']; // Preserva as propriedades padrão (name, email, image)
+  interface User extends DefaultUser {
+    // Ex: Se o seu model User no Prisma tiver um 'role'
+    // role: string;
   }
 }
 
-// 2. Estenda o tipo do JWT
+// 2. Estenda o tipo 'JWT'
 declare module 'next-auth/jwt' {
   /**
-   * O token JWT
+   * O token JWT agora terá a propriedade 'id'.
    */
   interface JWT {
-    id: string; // Adicione o 'id' aqui também
+    id: string;
   }
 }

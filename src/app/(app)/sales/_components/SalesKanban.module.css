@@ -1,0 +1,23 @@
+/* src/app/(app)/sales/_components/SalesKanban.module.css */
+
+.kanbanContainer {
+  overflow-x: auto; /* Permite scroll horizontal do container */
+  height: calc(100vh - 200px); /* Ajuste a altura conforme necessário */
+}
+
+.column {
+  min-width: 300px;
+  max-width: 300px; /* Largura fixa para as colunas */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.columnBody {
+  flex-grow: 1;
+  overflow-y: auto; /* Permite scroll vertical DENTRO da coluna */
+  min-height: 200px;
+  padding: 4px;
+  background-color: var(--mantine-color-gray-0);
+  border-radius: var(--mantine-radius-sm);
+}

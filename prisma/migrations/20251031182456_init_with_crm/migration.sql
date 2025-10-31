@@ -16,6 +16,12 @@ CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'PAID', 'OVERDUE');
 -- CreateEnum
 CREATE TYPE "OffcutStatus" AS ENUM ('AVAILABLE', 'RESERVED', 'USED');
 
+-- CreateEnum
+CREATE TYPE "PriceSensitivity" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
+
+-- CreateEnum
+CREATE TYPE "ClientIncomeLevel" AS ENUM ('LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4', 'LEVEL_5');
+
 -- CreateTable
 CREATE TABLE "manufacturers" (
     "id" TEXT NOT NULL,
@@ -61,9 +67,47 @@ CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "passwordHash" TEXT,
+    "emailVerified" TIMESTAMP(3),
+    "image" TEXT,
     "shopCapacityHoursPerWeek" INTEGER NOT NULL DEFAULT 40,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "accounts" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "providerAccountId" TEXT NOT NULL,
+    "refresh_token" TEXT,
+    "access_token" TEXT,
+    "expires_at" INTEGER,
+    "token_type" TEXT,
+    "scope" TEXT,
+    "id_token" TEXT,
+    "session_state" TEXT,
+
+    CONSTRAINT "accounts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "sessions" (
+    "id" TEXT NOT NULL,
+    "sessionToken" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "expires" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "verification_tokens" (
+    "identifier" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "expires" TIMESTAMP(3) NOT NULL
 );
 
 -- CreateTable
@@ -120,6 +164,22 @@ CREATE TABLE "clients" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "email" TEXT,
+    "phone" TEXT,
+    "addressStreet" TEXT,
+    "addressNumber" TEXT,
+    "addressNeighborhood" TEXT,
+    "addressCity" TEXT,
+    "addressState" TEXT,
+    "addressZipCode" TEXT,
+    "company" TEXT,
+    "jobTitle" TEXT,
+    "linkedinProfile" TEXT,
+    "instagramProfile" TEXT,
+    "priceSensitivity" "PriceSensitivity",
+    "incomeLevel" "ClientIncomeLevel",
+    "leadSource" TEXT,
+    "notes" TEXT,
 
     CONSTRAINT "clients_pkey" PRIMARY KEY ("id")
 );
@@ -132,7 +192,6 @@ CREATE TABLE "projects" (
     "status" "ProjectStatus" NOT NULL DEFAULT 'LEAD',
     "mockupText" TEXT,
     "finalDimensions" JSONB,
-    "leadSource" TEXT,
     "meetingNotes" TEXT,
     "architectId" TEXT,
     "totalQuotedPrice" DECIMAL(65,30),
@@ -404,6 +463,18 @@ CREATE UNIQUE INDEX "master_hardware_systemKey_key" ON "master_hardware"("system
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "accounts_provider_providerAccountId_key" ON "accounts"("provider", "providerAccountId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "sessions_sessionToken_key" ON "sessions"("sessionToken");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "verification_tokens_token_key" ON "verification_tokens"("token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "verification_tokens_identifier_token_key" ON "verification_tokens"("identifier", "token");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "construction_standards_userId_key" ON "construction_standards"("userId");
 
 -- CreateIndex
@@ -450,6 +521,12 @@ ALTER TABLE "master_hardware" ADD CONSTRAINT "master_hardware_manufacturerId_fke
 
 -- AddForeignKey
 ALTER TABLE "wholesalers" ADD CONSTRAINT "wholesalers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "workers" ADD CONSTRAINT "workers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
