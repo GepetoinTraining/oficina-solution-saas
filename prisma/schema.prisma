@@ -1,0 +1,573 @@
+// This is your Prisma schema file.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ===============================================
+// === 1. MODELOS GLOBAIS (NOSSA MASTER DB) ===
+// ===============================================
+
+model Manufacturer {
+  id               String           @id @default(cuid())
+  name             String           @unique // "Arauco"
+  masterMaterials  MasterMaterial[]
+  masterHardware   MasterHardware[]
+  @@map("manufacturers")
+}
+
+model MasterMaterial {
+  id               String            @id @default(cuid())
+  manufacturerId   String
+  manufacturer     Manufacturer      @relation(fields: [manufacturerId], references: [id])
+  name             String            // "Cobre Corten"
+  systemKey        String            @unique // "mdf_arauco_cobre_corten_18mm"
+  thickness_mm     Int
+  imageUrl         String?
+  userPriceEntries UserMaterialPrice[]
+  offcuts          Offcut[]
+  @@map("master_materials")
+}
+
+model MasterHardware {
+  id               String            @id @default(cuid())
+  manufacturerId   String
+  manufacturer     Manufacturer      @relation(fields: [manufacturerId], references: [id])
+  name             String            // "Dobradiça Slow 35mm Reta"
+  systemKey        String            @unique // "dobradica_fgv_slow_reta_35mm"
+  imageUrl         String?
+  userPriceEntries UserHardwarePrice[]
+  @@map("master_hardware")
+}
+
+model Wholesaler {
+  id             String            @id @default(cuid())
+  name           String // "Madville", "Casa do Marceneiro"
+  userId         String
+  user           User              @relation(fields: [userId], references: [id])
+  materialPrices UserMaterialPrice[]
+  hardwarePrices UserHardwarePrice[]
+  purchaseOrders PurchaseOrder[]
+  @@map("wholesalers")
+}
+
+
+// ===============================================
+// === 2. MODELOS DO USUÁRIO (A MARCENARIA) ===
+// ===============================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String   // Nome da Marcenaria
+
+  // O "DNA" DO NEGÓCIO
+  constructionStandard ConstructionStandard?
+  laborRates           LaborRates?
+  userMaterialPrices   UserMaterialPrice[]
+  userHardwarePrices   UserHardwarePrice[]
+
+  // Relações do Negócio
+  clients       Client[]
+  wholesalers   Wholesaler[]
+  offcutStock   Offcut[]
+  workers       Worker[]
+  notifications Notification[]
+  purchaseOrders PurchaseOrder[]
+
+  // NOVO! O "Motor de Produção"
+  shopCapacityHoursPerWeek Int @default(40) // [cite: 825] Total de horas PRODUTIVAS da oficina por semana
+
+  // --- NOVOS CAMPOS (SUAS IDEIAS) ---
+  // Relação com Arquitetos (Ideia 4)
+  architects Architect[]
+  // Relação com Templates (Ideia 12)
+  projectTemplates ProjectTemplate[]
+  // Relação com Marketplace (Ideia 6 e 13)
+  marketplaceItems MarketplaceItem[]
+  // Relação com Assinatura (Ideia 13)
+  subscription Subscription?
+  // Relação com Feature Flags (Ideia 14)
+  features     Feature[]     @relation("UserFeatures")
+
+  @@map("users")
+}
+
+model Worker {
+  id         String     @id @default(cuid())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id])
+  name       String     // "João da Silva"
+  role       WorkerRole @default(AUXILIAR)
+  hourlyRate Decimal    // CUSTO/hora
+  timeLogs   TimeLog[]
+  @@map("workers")
+}
+
+model ConstructionStandard {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+  // ... (campos de padrão de construção)
+  @@map("construction_standards")
+}
+
+model LaborRates {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+  // ... (campos de custo de mão de obra)
+  @@map("labor_rates")
+}
+
+model UserMaterialPrice {
+  id                String         @id @default(cuid())
+  userId            String
+  user              User           @relation(fields: [userId], references: [id])
+  masterMaterialId  String
+  masterMaterial    MasterMaterial @relation(fields: [masterMaterialId], references: [id])
+  wholesalerId      String?
+  wholesaler        Wholesaler?    @relation(fields: [wholesalerId], references: [id])
+  price             Decimal
+  parts             Part[]
+  purchaseOrderLine PurchaseOrderLineItem[] // Relaciona ao PO
+  @@map("user_material_prices")
+}
+
+model UserHardwarePrice {
+  id                String         @id @default(cuid())
+  userId            String
+  user              User           @relation(fields: [userId], references: [id])
+  masterHardwareId  String
+  masterHardware    MasterHardware @relation(fields: [masterHardwareId], references: [id])
+  wholesalerId      String?
+  wholesaler        Wholesaler?    @relation(fields: [wholesalerId], references: [id])
+  price             Decimal
+  purchaseOrderLine PurchaseOrderLineItem[] // Relaciona ao PO
+  @@map("user_hardware_prices")
+}
+
+
+// ========================================================
+// === 3. O PROJETO "WALLET" (KANBAN E FLUXO DE CAIXA) ===
+// ========================================================
+
+model Client {
+  id       String    @id @default(cuid())
+  userId   String
+  user     User      @relation(fields: [userId], references: [id])
+  name     String
+  projects Project[]
+  @@map("clients")
+}
+
+model Project {
+  id       String   @id @default(cuid())
+  name     String
+  clientId String
+  client   Client   @relation(fields: [clientId], references: [id])
+
+  // KANBAN
+  status   ProjectStatus @default(LEAD) // [cite: 855]
+
+  // BRIEFING
+  mockupText       String?
+  finalDimensions  Json?
+
+  // --- NOVOS CAMPOS (SUAS IDEIAS) ---
+  // (Ideia 1) Como o cliente o encontrou
+  leadSource String? // "Instagram", "Indicação", "Google"
+  // (Ideia 2) Formulário da Primeira Reunião
+  meetingNotes String? // Armazena o Markdown ou JSON do formulário
+  // (Ideia 4) Relação com Arquiteto
+  architectId String?
+  architect   Architect? @relation(fields: [architectId], references: [id])
+
+  // VALORES
+  totalQuotedPrice Decimal? // [cite: 860]
+
+  // SAÍDAS DA IA
+  preQuotes            PreQuote[]
+  generatedImages      GeneratedImage[]
+  partsList            PartsList?
+  assemblyInstructions AssemblyInstructions?
+
+  // "WALLET" (FLUXO DE CAIXA)
+  paymentsIn           Payment[]        // [cite: 867]
+  expensesOut          ProjectExpense[] // [cite: 868]
+
+  // APONTAMENTO DE HORAS
+  timeLogs             TimeLog[] // [cite: 870]
+
+  // MOTOR DE PROGRAMAÇÃO (SCHEDULING)
+  dueDate                 DateTime? // [cite: 872] Data de entrega prometida
+  estimatedProductionHours Float?    // [cite: 874] "Este projeto precisa de 60 horas"
+  calculatedStartDate     DateTime? // [cite: 875] "Comece em [data]"
+  projectPriority         Int       @default(1)
+
+  // --- NOVOS CAMPOS (SUAS IDEIAS) ---
+  // (Ideia 5) Relação com Comentários de Negociação
+  comments       ProjectComment[]
+  // (Ideia 5 e 7) Relação com Pedidos de Mudança
+  changeRequests ProjectChangeRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("projects")
+}
+
+// Dinheiro ENTRANDO (do Cliente)
+model Payment {
+  id          String        @id @default(cuid())
+  projectId   String
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  description String        // "Sinal 50%"
+  amount      Decimal
+  status      PaymentStatus @default(PENDING)
+  dueDate     DateTime?
+  paidAt      DateTime?
+  @@map("payments")
+}
+
+// Dinheiro SAINDO (Custos Reais do Projeto)
+model ProjectExpense {
+  id          String       @id @default(cuid())
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type        ExpenseType  // MATERIAL, FERRAGEM, MAO_DE_OBRA
+  description String       // "Compra de Chapas", "Horas João"
+  amount      Decimal      // Custo REAL
+  date        DateTime     @default(now())
+  
+  timeLogId   String?      @unique // [cite: 905] Link para o apontamento de horas
+  timeLog     TimeLog?     @relation(fields: [timeLogId], references: [id])
+  
+  purchaseOrderLineItemId String? @unique // [cite: 908] Link para a linha da NFe
+  purchaseOrderLineItem PurchaseOrderLineItem?
+
+  @@map("project_expenses")
+}
+
+model TimeLog {
+  id             String   @id @default(cuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id])
+  workerId       String
+  worker         Worker   @relation(fields: [workerId], references: [id])
+  date           DateTime @default(now())
+  hours          Float
+  calculatedCost Decimal
+  expenseEntry   ProjectExpense? // [cite: 922] Link para a despesa que este log gerou
+  @@map("time_logs")
+}
+
+// A NFe / Pedido de Compra (A "Nota da Madville")
+model PurchaseOrder {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  wholesalerId  String
+  wholesaler    Wholesaler @relation(fields: [wholesalerId], references: [id])
+  invoiceNumber String?   // "NFe 12345"
+  totalAmount   Decimal   // Valor total da nota
+  issueDate     DateTime
+  xmlData       String?
+  expenseLines  PurchaseOrderLineItem[]
+  createdAt     DateTime  @default(now())
+  @@map("purchase_orders")
+}
+
+// A "Linha" da NFe, que DIVIDE o custo
+model PurchaseOrderLineItem {
+  id              String   @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  
+  projectExpenseId String   @unique // [cite: 947] Cada linha de divisão é uma despesa única
+  projectExpense   ProjectExpense @relation(fields: [projectExpenseId], references: [id])
+
+  // Opcional: Link direto ao material/ferragem para IA
+  userMaterialPriceId String?
+  userMaterialPrice   UserMaterialPrice? @relation(fields: [userMaterialPriceId], references: [id])
+  userHardwarePriceId String?
+  userHardwarePrice   UserHardwarePrice? @relation(fields: [userHardwarePriceId], references: [id])
+
+  description     String   // "5x Chapas Cobre Corten"
+  amount          Decimal  // O valor DESTA linha
+  quantity        Int?
+
+  @@map("purchase_order_line_items")
+}
+
+
+// ========================================================
+// === 4. NOVOS MODELOS (ARQUITETOS, NEGOCIAÇÃO, TEMPLATES) ===
+// ========================================================
+
+// NOVO! (Ideia 4) Perfil do Arquiteto
+model Architect {
+  id        String    @id @default(cuid())
+  userId    String    // A qual marceneiro este arquiteto pertence
+  user      User      @relation(fields: [userId], references: [id])
+  name      String
+  email     String?   @unique
+  phone     String?
+  projects  Project[] // Projetos deste arquiteto
+  @@map("architects")
+}
+
+// NOVO! (Ideia 5) Comentários da Fase de Negociação
+model ProjectComment {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  authorName String   // "Ana Silva (Cliente)" ou "Marceneiro"
+  content   String   // "Gostei, mas podemos trocar o puxador para o modelo X?"
+  
+  createdAt DateTime @default(now())
+  @@map("project_comments")
+}
+
+// NOVO! (Ideia 5 e 7) Registro de Mudanças e Regras de Negociação
+model ProjectChangeRequest {
+  id           String    @id @default(cuid())
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  authorName   String    // "Cliente" ou "Marceneiro"
+  description  String    // "Trocar puxador K10 para K20"
+  
+  // Regras de Negociação (Ideia 7)
+  priceImpact  Decimal?  // "+R$ 150,00"
+  deliveryDateImpactDays Int? // "+2 dias" (a app calcula isso)
+  
+  status       String    // "PENDING", "APPROVED", "REJECTED"
+  createdAt    DateTime  @default(now())
+  @@map("project_change_requests")
+}
+
+// NOVO! (Ideia 12) Templates de Projetos
+model ProjectTemplate {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  name         String   // "Gabinete Cozinha 2 Portas Padrão"
+  description  String?
+  
+  // Armazena a estrutura de peças, ferragens, horas, etc. como JSON
+  templateData Json
+  
+  createdAt    DateTime @default(now())
+  @@map("project_templates")
+}
+
+// NOVO! (Ideia 6 e 13) Itens do Marketplace / "Stock to Ready to Sell"
+model MarketplaceItem {
+  id          String   @id @default(cuid())
+  userId      String   // Qual marceneiro está vendendo
+  user        User     @relation(fields: [userId], references: [id])
+  name        String   // "Banqueta Alta de Freijó"
+  description String?
+  price       Decimal
+  imageUrl    String?
+  
+  // Para "stock to ready to sell" (Ideia 13)
+  isStockItem Boolean  @default(false) 
+  quantity    Int      @default(1)
+  
+  @@map("marketplace_items")
+}
+
+
+// ========================================================
+// === 5. MODELOS DE PRODUÇÃO E ESTOQUE (EXISTENTES) ===
+// ========================================================
+
+model PartsList {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id])
+  parts     Part[]
+  @@map("parts_lists")
+}
+
+model Part {
+  id                  String            @id @default(cuid())
+  partsListId         String
+  partsList           PartsList         @relation(fields: [partsListId], references: [id])
+  name                String            // "Lateral Esquerda"
+  quantity            Int
+  height_mm           Int
+  width_mm            Int
+  userMaterialPriceId String
+  userMaterialPrice   UserMaterialPrice @relation(fields: [userMaterialPriceId], references: [id])
+  @@map("parts")
+}
+
+model Offcut {
+  id               String       @id @default(cuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id])
+  masterMaterialId String
+  masterMaterial   MasterMaterial @relation(fields: [masterMaterialId], references: [id])
+  height_mm        Int
+  width_mm         Int
+  status           OffcutStatus @default(AVAILABLE)
+  @@map("offcuts")
+}
+
+model GeneratedImage {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  url       String
+  promptUsed String?
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  @@map("generated_images")
+}
+
+model AssemblyInstructions {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id])
+  content   String   // O texto em Markdown das instruções
+  createdAt DateTime @default(now())
+  @@map("assembly_instructions")
+}
+
+model PreQuote {
+  id               String   @id @default(cuid())
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id])
+  version          Int      @default(1)
+  materialCost     Decimal
+  hardwareCost     Decimal
+  laborCost        Decimal
+  totalCost        Decimal
+  markupPercentage Float
+  finalPrice       Decimal
+  notes            String?
+  createdAt        DateTime @default(now())
+  @@map("pre_quotes")
+}
+
+
+// ========================================================
+// === 6. SISTEMA (ALERTAS, SAAS E ENUMS) ===
+// ========================================================
+
+// O "Trigger" que você pediu (Ideia 10)
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  type      NotificationType
+  message   String   // "Pagamento de R$ 5.000,00... está atrasado."
+  isRead    Boolean  @default(false)
+  linkTo    String?  // "/project/clx.../payments"
+  
+  createdAt DateTime @default(now())
+  @@map("notifications")
+}
+
+// NOVO! (Ideia 13) Modelo de Assinatura
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  planId    String   // "basic", "pro", "full_system"
+  status    String   // "active", "past_due", "canceled"
+  
+  // Stripe/Gateway IDs
+  gatewayCustomerId String? @unique
+  gatewaySubId  String? @unique
+  
+  currentPeriodEnd DateTime? // Data de renovação
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@map("subscriptions")
+}
+
+// NOVO! (Ideia 14) Modelo de Feature Flags
+model Feature {
+  id    String @id @default(cuid())
+  name  String @unique // "e_signing", "stock_to_sell", "advanced_scheduling"
+  
+  // Relação muitos-para-muitos com Usuários
+  users User[] @relation("UserFeatures")
+  
+  @@map("features")
+}
+
+
+// --- ENUMS ---
+
+enum NotificationType {
+  PAYMENT_OVERDUE
+  PROJECT_START_WARNING // "ATENÇÃO: Você precisa começar o 'Projeto X'!"
+  STOCK_LOW
+  PROJECT_STATUS_UPDATE
+  PAYMENT_RECEIVED
+  CAPACITY_WARNING_80   // NOVO! (Ideia 10) "Oficina a 80% da capacidade"
+}
+
+// O motor dos Kanbans (Vendas e Produção)
+enum ProjectStatus {
+  // Kanban de Vendas
+  LEAD
+  CONTACTED
+  QUOTED
+  NEGOTIAÇÃO // [cite: 987] (Mantido do seu schema original)
+  WON
+  LOST
+
+  // Kanban de Produção
+  PRODUCTION_BACKLOG
+  MATERIALS_ORDERED
+  MATERIALS_IN_STOCK
+  CUTTING
+  EDGE_BANDING
+  PRE_ASSEMBLY
+  INSTALLATION
+  COMPLETED
+  ON_HOLD
+}
+
+enum WorkerRole {
+  OWNER
+  MARCENEIRO_CHEFE
+  MARCENEIRO
+  AUXILIAR
+  INSTALLER
+  ADMIN_FINANCE
+}
+
+enum ExpenseType {
+  MATERIAL
+  HARDWARE
+  LABOR
+  FREELANCER
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum OffcutStatus {
+  AVAILABLE
+  RESERVED
+  USED
+}
