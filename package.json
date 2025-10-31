@@ -9,16 +9,22 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
     "@mantine/core": "^8.3.6",
     "@mantine/form": "^8.3.6",
     "@mantine/hooks": "^8.3.6",
     "@prisma/client": "^6.18.0",
+    "@tabler/icons-react": "^3.35.0",
+    "bcryptjs": "^3.0.2",
     "dotenv-cli": "^11.0.0",
     "next": "16.0.1",
+    "next-auth": "^4.24.7",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
