@@ -16,6 +16,8 @@ type RegisterState = {
   };
 };
 
+export type { RegisterState };
+
 // Esquema de validação com Zod
 const registerSchema = z.object({
   name: z.string().min(3, 'O nome da marcenaria é obrigatório'),

@@ -41,7 +41,7 @@ Nossa arquitetura é baseada em uma stack moderna TypeScript.
 O projeto é dividido em três áreas principais usando **Route Groups** do App Router.
 
 ### 1. Site Público (Marketing)
-* `/` (`src/app/page.tsx`): Home page com *scrolling* e CTAs.
+* `/` (`src/app/page.tsx`): Home page com *scrolling* e CTAs. (placeholder page okay, will continue later)
 * `/pricing` (`src/app/pricing/page.tsx`): Página de preços/planos.
 * `/about` (`src/app/about/page.tsx`): Página "Sobre".
 

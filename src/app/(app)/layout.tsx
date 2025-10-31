@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 import { AppShell } from '@mantine/core';
-import { AppHeader } from './_components/AppHeader'; // Criaremos este
+import  AppHeader  from './_components/AppHeader'; // Criaremos este
 import { AppNavbar } from './_components/AppNavbar'; // Criaremos este
 
 export default async function AppLayout({

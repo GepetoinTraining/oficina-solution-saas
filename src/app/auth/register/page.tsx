@@ -2,28 +2,19 @@
 'use client';
 
 import { TextInput, PasswordInput, Button, Stack, Alert, Anchor } from '@mantine/core';
-import { useFormState } from 'react-dom';
-import { registerUser } from '../actions';
+import { useActionState, useEffect } from 'react';
+// 1. Import both the function AND the type from actions.ts
+import { registerUser, RegisterState } from '../actions';
 import Link from 'next/link';
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-// 1. Defina o tipo do estado inicial (pode importar de 'actions.ts' se preferir)
-type RegisterState = {
-  success: boolean;
-  error?: {
-    name?: string[];
-    email?: string[];
-    password?: string[];
-    _form?: string[];
-  };
-};
+// 2. Remove the local type definition, as we are now importing it.
 
-// 2. Aplique o tipo ao estado inicial
+// 3. Apply the imported type to the initial state
 const initialState: RegisterState = { success: false, error: {} };
 
 export default function RegisterPage() {
-  const [state, formAction] = useFormState(registerUser, initialState);
+  const [state, formAction] = useActionState(registerUser, initialState);
   const router = useRouter();
 
   useEffect(() => {
@@ -38,8 +29,7 @@ export default function RegisterPage() {
       <Stack>
         {state.error?._form && (
           <Alert color="red" title="Erro no Registro">
-            {/* O erro agora é um array, pegue o primeiro item */}
-            {state.error._form[0]} 
+            {state.error._form[0]}
           </Alert>
         )}
 
@@ -48,7 +38,6 @@ export default function RegisterPage() {
           name="name"
           placeholder="Minha Marcenaria LTDA"
           required
-          // Pegue o primeiro erro do array
           error={state.error?.name?.[0]}
         />
         <TextInput

@@ -1,11 +1,12 @@
 // src/app/api/auth/[...nextauth]/route.ts
 
-import NextAuth from 'next-auth';
+import NextAuth, { AuthOptions } from 'next-auth'; // 1. Import AuthOptions
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import prisma from '@/app/lib/prisma'; // Nosso singleton do Prisma!
+import prisma from '@/app/lib/prisma';
 
-export const authOptions = {
+// 2. Add the 'AuthOptions' type to your object
+export const authOptions: AuthOptions = {
   // Configure o Prisma Adapter
   adapter: PrismaAdapter(prisma),
 
@@ -46,7 +47,7 @@ export const authOptions = {
 
   // Estratégia de Sessão
   session: {
-    strategy: 'jwt', // Recomendado para o Prisma Adapter
+    strategy: 'jwt', // Agora TypeScript sabe que 'jwt' é do tipo SessionStrategy
   },
 
   // Variável de ambiente (Passo 6)

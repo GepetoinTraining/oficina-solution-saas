@@ -8,7 +8,7 @@ import { IconLogout, IconSettings, IconUserCircle } from '@tabler/icons-react';
 import Link from 'next/link';
 
 // Recebe a sessão que pegamos no layout (Server Component)
-export function AppHeader({ session }: { session: Session }) {
+export default function AppHeader({ session }: { session: Session }) {
 
   const userName = session.user?.name || session.user?.email;
 
@@ -49,3 +49,4 @@ export function AppHeader({ session }: { session: Session }) {
     </Group>
   );
 }
+

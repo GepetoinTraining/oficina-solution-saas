@@ -1,66 +1,55 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+
+import { Container, Title, Text, Button, Stack, Group } from '@mantine/core';
+import { PublicHeader } from './_components/PublicHeader';
+import Link from 'next/link';
+import { IconArrowRight } from '@tabler/icons-react';
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <Stack gap={0}>
+      <PublicHeader />
+      <Container size="md" style={{ paddingTop: '6rem', paddingBottom: '6rem' }}>
+        <Stack gap="xl" align="center">
+          <Title
+            order={1}
+            ta="center"
+            style={{ fontSize: '3.5rem', lineHeight: 1.1 }}
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            Do Orçamento à Entrega:
+            <br />
+            O Sistema Completo para sua Marcenaria
+          </Title>
+
+          <Text size="xl" c="dimmed" ta="center" maw={600}>
+            Organize seus projetos, controle o financeiro de cada obra e gerencie
+            sua produção em um só lugar. Feito para marceneiros que valorizam
+            tempo e lucro.
+          </Text>
+
+          <Group>
+            <Button
+              component={Link}
+              href="/auth/register"
+              size="lg"
+              rightSection={<IconArrowRight size={16} />}
+            >
+              Começar Teste Gratuito
+            </Button>
+            <Button
+              component={Link}
+              href="/pricing"
+              size="lg"
+              variant="default"
+            >
+              Ver Planos
+            </Button>
+          </Group>
+        </Stack>
+      </Container>
+      
+      {/* Aqui podemos adicionar seções de Features, Preços, etc. */}
+      
+    </Stack>
   );
 }
