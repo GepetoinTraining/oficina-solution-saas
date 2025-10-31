@@ -1,13 +1,13 @@
 /* src/app/(app)/sales/_components/SalesKanban.module.css */
 
 .kanbanContainer {
-  overflow-x: auto; /* Permite scroll horizontal do container */
-  height: calc(100vh - 200px); /* Ajuste a altura conforme necessário */
+  overflow-x: auto;
+  height: calc(100vh - 200px);
 }
 
 .column {
   min-width: 300px;
-  max-width: 300px; /* Largura fixa para as colunas */
+  max-width: 300px;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -15,9 +15,27 @@
 
 .columnBody {
   flex-grow: 1;
-  overflow-y: auto; /* Permite scroll vertical DENTRO da coluna */
+  overflow-y: auto;
   min-height: 200px;
   padding: 4px;
   background-color: var(--mantine-color-gray-0);
   border-radius: var(--mantine-radius-sm);
+}
+
+/* --- NOVAS CLASSES PARA DND-KIT --- */
+
+/* Adiciona este novo seletor */
+.draggableCard {
+  cursor: grab;
+}
+
+.dragging {
+  opacity: 0.5;
+  cursor: grabbing; /* Garante que está aqui */
+}
+
+.dragOverlay {
+  z-index: 1000;
+  box-shadow: var(--mantine-shadow-md);
+  cursor: grabbing;
 }

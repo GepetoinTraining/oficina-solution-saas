@@ -250,17 +250,15 @@ model Project {
   client   Client   @relation(fields: [clientId], references: [id])
 
   // KANBAN
-  status   ProjectStatus @default(LEAD) // [cite: 855]
+  status   ProjectStatus @default(LEAD) //
 
   // BRIEFING
   mockupText       String?
   finalDimensions  Json?
 
-  // --- NOVOS CAMPOS (SUAS IDEIAS) ---
-  // (Ideia 1) Como o cliente o encontrou
-  // leadSource String? // "Instagram", "Indicação", "Google"
   // (Ideia 2) Formulário da Primeira Reunião
-  meetingNotes String? // Armazena o Markdown ou JSON do formulário
+  meetingNotes String? @db.Text // <-- VAMOS USAR ESTE CAMPO (MUDADO PARA TEXT)
+
   // (Ideia 4) Relação com Arquiteto
   architectId String?
   architect   Architect? @relation(fields: [architectId], references: [id])
@@ -288,10 +286,14 @@ model Project {
   projectPriority         Int       @default(1)
 
   // --- NOVOS CAMPOS (SUAS IDEIAS) ---
-  // (Ideia 5) Relação com Comentários de Negociação
-  comments       ProjectComment[]
-  // (Ideia 5 e 7) Relação com Pedidos de Mudança
+  // (Ideia 5) Relação com Comentários de Negociação (MOVEMOS PARA QuoteItem)
+  // comments       ProjectComment[] // <-- REMOVIDO DAQUI
+  
+  // (Ideia 5 e 7) Relação com Pedidos de Mudança (AINDA GLOBAL)
   changeRequests ProjectChangeRequest[]
+
+  // NOVO! Relação com os Itens do Orçamento
+  quoteItems QuoteItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -399,14 +401,18 @@ model Architect {
   @@map("architects")
 }
 
-// NOVO! (Ideia 5) Comentários da Fase de Negociação
+// MODIFICADO! (Ideia 5) Comentários da Fase de Negociação
 model ProjectComment {
   id        String   @id @default(cuid())
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  //projectId String // <-- REMOVIDO
+  //project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade) // <-- REMOVIDO
+  
+  quoteItemId String    // <-- 2. ADICIONADO
+  quoteItem   QuoteItem @relation(fields: [quoteItemId], references: [id], onDelete: Cascade) // <-- 2. ADICIONADO
   
   authorName String   // "Ana Silva (Cliente)" ou "Marceneiro"
-  content   String   // "Gostei, mas podemos trocar o puxador para o modelo X?"
+  content   String   @db.Text // "Gostei, mas podemos trocar o puxador para o modelo X?"
   
   createdAt DateTime @default(now())
   @@map("project_comments")
@@ -536,6 +542,23 @@ model PreQuote {
   @@map("pre_quotes")
 }
 
+// NOVO! (Ideia de breakdown) Itens do Pré-Orçamento / Orçamento
+model QuoteItem {
+  id          String    @id @default(cuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  name        String    // "Cozinha" ou "Gabinete Pia"
+  description String?   @db.Text // "MDF Cobre Corten, Puxador Gola, Corrediça Blum"
+  price       Decimal
+  
+  comments    ProjectComment[] // <-- 3. Comentários agora são POR ITEM
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  @@map("quote_items")
+}
+
 
 // ========================================================
 // === 6. SISTEMA (ALERTAS, SAAS E ENUMS) ===
@@ -605,7 +628,7 @@ enum ProjectStatus {
   LEAD
   CONTACTED
   QUOTED
-  NEGOTIAÇÃO // [cite: 987] (Mantido do seu schema original)
+  NEGOTIAÇÃO //
   WON
   LOST
 
