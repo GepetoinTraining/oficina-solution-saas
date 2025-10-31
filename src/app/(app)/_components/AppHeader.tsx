@@ -2,7 +2,8 @@
 'use client';
 
 import { Group, Title, Button, Menu, ActionIcon, Avatar } from '@mantine/core';
-import { signOut, Session } from 'next-auth/react';
+import { Session } from 'next-auth'; // Import Session from 'next-auth'
+import { signOut } from 'next-auth/react'; // Keep signOut from 'next-auth/react'
 import { IconLogout, IconSettings, IconUserCircle } from '@tabler/icons-react';
 import Link from 'next/link';
 
