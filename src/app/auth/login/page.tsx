@@ -15,7 +15,6 @@ export default function LoginPage() {
   const justRegistered = searchParams.get('registered') === 'true';
 
   const [error, setError] = useState<string | null>(null);
-  import { useState } from 'react';
   const [isLoading, setIsLoading] = useState(false); // <-- ADICIONE ISSO
 
   const form = useForm({
