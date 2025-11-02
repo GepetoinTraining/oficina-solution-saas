@@ -5,7 +5,7 @@ import prisma from '@/app/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/lib/auth';
 import { ProjectStatus } from '@prisma/client';
 
 // Estado de retorno para o useActionState
