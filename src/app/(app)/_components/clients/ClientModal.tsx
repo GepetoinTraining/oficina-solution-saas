@@ -31,7 +31,11 @@ interface ClientModalProps {
   client: Client | null;
 }
 
-const initialState = { success: false, message: '' };
+const initialState = { 
+  success: false, 
+  message: '',
+  errors: {}
+};
 
 export function ClientModal({ opened, onClose, client }: ClientModalProps) {
   const [state, formAction] = useActionState(upsertClient, initialState); // 2. Mude o hook
