@@ -15,6 +15,8 @@ export default function LoginPage() {
   const justRegistered = searchParams.get('registered') === 'true';
 
   const [error, setError] = useState<string | null>(null);
+  import { useState } from 'react';
+  const [isLoading, setIsLoading] = useState(false); // <-- ADICIONE ISSO
 
   const form = useForm({
     initialValues: {
@@ -28,6 +30,7 @@ export default function LoginPage() {
   });
 
   const handleSubmit = async (values: typeof form.values) => {
+    setIsLoading(true);
     setError(null);
 
     const result = await signIn('credentials', {
@@ -40,7 +43,9 @@ export default function LoginPage() {
     } else {
       // Sucesso, redireciona para o dashboard
       router.push(callbackUrl);
-    }
+    } finally {
+      setIsLoading(false);
+     }
   };
 
   return (
