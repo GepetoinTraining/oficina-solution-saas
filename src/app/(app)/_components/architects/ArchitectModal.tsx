@@ -21,7 +21,11 @@ interface ArchitectModalProps {
   architect: Architect | null; // Passa o arquiteto para edição
 }
 
-const initialState = { success: false, message: '' };
+const initialState = { 
+  success: false, 
+  message: '',
+  errors: {}
+};
 
 export function ArchitectModal({
   opened,
