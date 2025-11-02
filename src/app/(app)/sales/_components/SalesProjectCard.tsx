@@ -78,7 +78,8 @@ export const SalesProjectCard = forwardRef<
               size={project.totalQuotedPrice ? 'sm' : 'xs'}
               c={project.totalQuotedPrice ? 'default' : 'dimmed'}
             >
-              {formatCurrency(project.totalQuotedPrice)}
+              {formatCurrency(project.totalQuotedPrice?.toNumber() ?? null)}
+
             </Text>
           </Group>
         </Stack>
