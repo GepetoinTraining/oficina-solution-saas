@@ -23,7 +23,11 @@ interface SalesLeadModalProps {
   architects: Architect[]; // E dos arquitetos
 }
 
-const initialState = { success: false, message: '' };
+const initialState = { 
+  success: false, 
+  message: '',
+  errors: {}
+ };
 
 export function SalesLeadModal({
   opened,
