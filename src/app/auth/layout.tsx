@@ -1,5 +1,5 @@
 // src/app/auth/layout.tsx
-import { Container, Paper, Title } from '@mantine/core';
+import { Container, Paper, Title, Loader } from '@mantine/core';
 import { Suspense } from 'react';
 
 export default function AuthLayout({
