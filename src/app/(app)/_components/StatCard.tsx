@@ -2,7 +2,7 @@
 
 import { Paper, Text, Title, Group } from '@mantine/core';
 // 1. Import 'IconProps' instead of 'TablerIconsProps'
-// import type { IconProps } from '@tabler/icons-react';
+import type { IconProps } from '@tabler/icons-react';
 import React from 'react';
 
 interface StatCardProps {
