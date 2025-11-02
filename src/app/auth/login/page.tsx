@@ -29,23 +29,34 @@ export default function LoginPage() {
   });
 
   const handleSubmit = async (values: typeof form.values) => {
-    setIsLoading(true);
-    setError(null);
+  setIsLoading(true);
+  setError(null);
 
+  try {
     const result = await signIn('credentials', {
       ...values,
-      redirect: false, // Importante: não redireciona, retorna o resultado
+      redirect: false,
     });
 
+    // Seu "if" normal vai aqui dentro do "try"
     if (result?.error) {
       setError("Email ou senha inválidos.");
     } else {
       // Sucesso, redireciona para o dashboard
-      router.push(callbackUrl);
-    } finally {
-      setIsLoading(false);
-     }
-  };
+      router.push(callbackUrl1);
+    }
+
+  } catch (e) {
+    // Isso pega erros inesperados (ex: rede caiu, servidor 500)
+    console.error(e); // Bom para debugar
+    setError("Ocorreu um erro inesperado. Tente novamente.");
+  
+  } finally {
+    // Isso SEMPRE executa, garantindo que o loading termine
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
