@@ -48,7 +48,7 @@ export async function createLeadProject(
   }
   
   if (!dataToParse.architectId) {
-    delete dataToParse.architectId;
+    delete (dataToParse as any).architectId;
   }
 
   try {
