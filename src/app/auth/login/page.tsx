@@ -43,7 +43,7 @@ export default function LoginPage() {
       setError("Email ou senha inválidos.");
     } else {
       // Sucesso, redireciona para o dashboard
-      router.push(callbackUrl1);
+      router.push(callbackUrl);
     }
 
   } catch (e) {
