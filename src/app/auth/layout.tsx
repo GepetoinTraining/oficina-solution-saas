@@ -12,7 +12,9 @@ export default function AuthLayout({
         <Title ta="center" order={2} mb="lg">
           Oficina SaaS
         </Title>
-        {children}
+          <Suspense fallback={<Loader />}>
+            {children}
+        </Suspense>
       </Paper>
     </Container>
   );
