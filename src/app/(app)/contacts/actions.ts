@@ -4,8 +4,7 @@ import prisma from '@/app/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-// 1. CHANGE THIS IMPORT
-import { authOptions } from '@/app/lib/auth';
+import { authOptions } from '@/app/lib/auth'; // <-- This path is now correct
 import { ClientIncomeLevel, PriceSensitivity } from '@prisma/client';
 
 // --- Estado Genérico de Retorno ---
@@ -42,17 +41,18 @@ export async function upsertClient(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  // 2. This line will now work correctly
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return { success: false, message: 'Não autorizado' };
   }
 
   const rawData = Object.fromEntries(formData);
+
+  // Converte valores vazios de Enums para 'null'
   const dataToParse = {
     ...rawData,
     priceSensitivity: rawData.priceSensitivity || null,
-    incomeLevel: raw.incomeLevel || null,
+    incomeLevel: rawData.incomeLevel || null, // <-- THE FIX IS HERE (was 'raw.')
   };
 
   const result = clientSchema.safeParse(dataToParse);
@@ -68,11 +68,13 @@ export async function upsertClient(
 
   try {
     if (id) {
+      // Atualizar
       await prisma.client.update({
         where: { id: id, userId: session.user.id },
         data,
       });
     } else {
+      // Criar
       await prisma.client.create({
         data: {
           ...data,
@@ -80,6 +82,7 @@ export async function upsertClient(
         },
       });
     }
+
     revalidatePath('/contacts');
     return { success: true, message: 'Cliente salvo com sucesso' };
   } catch (error) {
@@ -100,7 +103,6 @@ export async function upsertArchitect(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  // 3. This line will also work correctly
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return { success: false, message: 'Não autorizado' };
@@ -119,11 +121,13 @@ export async function upsertArchitect(
 
   try {
     if (id) {
+      // Atualizar
       await prisma.architect.update({
-        where: { id: id, userId: session.user.id },
+        where: { id: id, userId: session.user.id }, // Segurança
         data: { name, email, phone },
       });
     } else {
+      // Criar
       await prisma.architect.create({
         data: {
           name,
@@ -133,10 +137,12 @@ export async function upsertArchitect(
         },
       });
     }
+
     revalidatePath('/contacts');
     return { success: true, message: 'Arquiteto salvo com sucesso' };
   } catch (error) {
     return { success: false, message: 'Erro de banco de dados' };
   }
 }
+
 
