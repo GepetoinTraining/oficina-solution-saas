@@ -11,7 +11,7 @@ import {
   ActionIcon,
 } from '@mantine/core';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/lib/auth';
 import prisma from '@/app/lib/prisma';
 import { notFound, redirect } from 'next/navigation';
 import { IconArrowLeft, IconUser, IconBuildingCommunity } from '@tabler/icons-react';
